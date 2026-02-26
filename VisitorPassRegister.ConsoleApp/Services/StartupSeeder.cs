@@ -1,3 +1,4 @@
+using System;
 using VisitorPassRegister.ConsoleApp.Enums;
 using VisitorPassRegister.ConsoleApp.Models;
 
@@ -18,11 +19,11 @@ public class StartupSeeder
         var existingEmployees = await _hostEmployeeService.GetAllEmployeesAsync();
         if (existingEmployees.Any())
         {
-            Console.WriteLine("✓ Default data already exists. Skipping seed.");
+            System.Console.WriteLine("✓ Default data already exists. Skipping seed.");
             return;
         }
 
-        Console.WriteLine("Seeding default host employees...");
+        System.Console.WriteLine("Seeding default host employees...");
 
         // Seed Receptionist
         var receptionist = new HostEmployee
@@ -37,11 +38,11 @@ public class StartupSeeder
         try
         {
             await _hostEmployeeService.CreateEmployeeAsync(receptionist);
-            Console.WriteLine("✓ Receptionist account created.");
+            System.Console.WriteLine("✓ Receptionist account created.");
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"✗ Failed to create Receptionist account: {ex.Message}");
+            System.Console.WriteLine($"✗ Failed to create Receptionist account: {ex.Message}");
         }
 
         // Seed Staff
@@ -57,13 +58,13 @@ public class StartupSeeder
         try
         {
             await _hostEmployeeService.CreateEmployeeAsync(staff);
-            Console.WriteLine("✓ Staff account created.");
+            System.Console.WriteLine("✓ Staff account created.");
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"✗ Failed to create Staff account: {ex.Message}");
+            System.Console.WriteLine($"✗ Failed to create Staff account: {ex.Message}");
         }
 
-        Console.WriteLine("✓ Seeding completed.");
+        System.Console.WriteLine("✓ Seeding completed.");
     }
 }

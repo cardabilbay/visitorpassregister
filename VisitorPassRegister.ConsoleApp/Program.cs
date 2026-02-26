@@ -1,7 +1,9 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using VisitorPassRegister.ConsoleApp.Console;
 using VisitorPassRegister.ConsoleApp.Data;
+using VisitorPassRegister.ConsoleApp.Enums;
 using VisitorPassRegister.ConsoleApp.Repositories;
 using VisitorPassRegister.ConsoleApp.Services;
 
@@ -33,6 +35,11 @@ services.AddScoped<VisitRecordService>();
 services.AddScoped<StartupSeeder>();
 services.AddScoped<AuthService>();
 
+// Register Console UI
+services.AddScoped<LoginFlow>();
+services.AddScoped<ReceptionistMenu>();
+services.AddScoped<StaffMenu>();
+
 var serviceProvider = services.BuildServiceProvider();
 
 // Initialize application
@@ -49,61 +56,46 @@ using (var scope = serviceProvider.CreateScope())
     var seeder = scope.ServiceProvider.GetRequiredService<StartupSeeder>();
     await seeder.SeedDefaultDataAsync();
     Console.WriteLine();
-
-    // Verify authentication setup
-    var authService = scope.ServiceProvider.GetRequiredService<AuthService>();
-    Console.WriteLine("Testing authentication...");
-    
-    // Test Receptionist login
-    try
-    {
-        var receptionist = await authService.AuthenticateAsync("reception", "reception123");
-        if (receptionist != null)
-        {
-            Console.WriteLine($"✓ Receptionist login successful: {receptionist.FullName} ({receptionist.Role})");
-        }
-        else
-        {
-            Console.WriteLine("✗ Receptionist login failed: Invalid credentials");
-        }
-    }
-    catch (Exception ex)
-    {
-        Console.WriteLine($"✗ Receptionist login error: {ex.Message}");
-    }
-
-    // Test Staff login
-    try
-    {
-        var staff = await authService.AuthenticateAsync("staff", "staff123");
-        if (staff != null)
-        {
-            Console.WriteLine($"✓ Staff login successful: {staff.FullName} ({staff.Role})");
-        }
-        else
-        {
-            Console.WriteLine("✗ Staff login failed: Invalid credentials");
-        }
-    }
-    catch (Exception ex)
-    {
-        Console.WriteLine($"✗ Staff login error: {ex.Message}");
-    }
-
-    // Test invalid login
-    try
-    {
-        var invalid = await authService.AuthenticateAsync("invalid", "wrongpassword");
-        if (invalid == null)
-        {
-            Console.WriteLine("✓ Invalid login correctly rejected");
-        }
-    }
-    catch (Exception ex)
-    {
-        Console.WriteLine($"✗ Invalid login test error: {ex.Message}");
-    }
-
-    Console.WriteLine("\n✓ Application initialization completed successfully.");
-    Console.WriteLine("✓ Application is ready for further development.");
 }
+
+// Main application loop
+var running = true;
+while (running)
+{
+    using (var scope = serviceProvider.CreateScope())
+    {
+        var loginFlow = scope.ServiceProvider.GetRequiredService<LoginFlow>();
+        var user = await loginFlow.ShowLoginScreenAsync();
+
+        if (user != null)
+        {
+            // Route to appropriate menu based on role
+            if (user.Role == Role.Receptionist)
+            {
+                var receptionistMenu = new ReceptionistMenu(user);
+                var continueSession = await receptionistMenu.ShowMenuAsync();
+                if (!continueSession)
+                {
+                    // User logged out, return to login
+                    continue;
+                }
+            }
+            else if (user.Role == Role.Staff)
+            {
+                var staffMenu = new StaffMenu(user);
+                var continueSession = await staffMenu.ShowMenuAsync();
+                if (!continueSession)
+                {
+                    // User logged out, return to login
+                    continue;
+                }
+            }
+            else
+            {
+                ConsoleUI.PrintError("Unknown user role. Returning to login.");
+                ConsoleUI.PressAnyKeyToContinue();
+            }
+        }
+    }
+}
+
