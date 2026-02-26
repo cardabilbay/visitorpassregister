@@ -8,4 +8,6 @@ public class Visitor
     public string NationalIdNumber { get; set; } = string.Empty;
     public string PhoneNumber { get; set; } = string.Empty;
     public string CompanyName { get; set; } = string.Empty;
+
+    public string FullName => $"{FirstName} {LastName}";
 }

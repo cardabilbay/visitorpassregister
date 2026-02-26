@@ -39,6 +39,9 @@ services.AddScoped<AuthService>();
 services.AddScoped<LoginFlow>();
 services.AddScoped<ReceptionistMenu>();
 services.AddScoped<StaffMenu>();
+services.AddScoped<VisitorManager>();
+services.AddScoped<HostEmployeeManager>();
+services.AddScoped<VisitRecordManager>();
 
 var serviceProvider = services.BuildServiceProvider();
 
@@ -72,7 +75,11 @@ while (running)
             // Route to appropriate menu based on role
             if (user.Role == Role.Receptionist)
             {
-                var receptionistMenu = new ReceptionistMenu(user);
+                var visitorManager = scope.ServiceProvider.GetRequiredService<VisitorManager>();
+                var hostManager = scope.ServiceProvider.GetRequiredService<HostEmployeeManager>();
+                var visitManager = scope.ServiceProvider.GetRequiredService<VisitRecordManager>();
+                
+                var receptionistMenu = new ReceptionistMenu(user, visitorManager, hostManager, visitManager);
                 var continueSession = await receptionistMenu.ShowMenuAsync();
                 if (!continueSession)
                 {

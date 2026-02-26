@@ -6,10 +6,20 @@ namespace VisitorPassRegister.ConsoleApp.Console;
 public class ReceptionistMenu
 {
     private readonly HostEmployee _currentUser;
+    private readonly VisitorManager _visitorManager;
+    private readonly HostEmployeeManager _hostEmployeeManager;
+    private readonly VisitRecordManager _visitRecordManager;
 
-    public ReceptionistMenu(HostEmployee currentUser)
+    public ReceptionistMenu(
+        HostEmployee currentUser,
+        VisitorManager visitorManager,
+        HostEmployeeManager hostEmployeeManager,
+        VisitRecordManager visitRecordManager)
     {
         _currentUser = currentUser;
+        _visitorManager = visitorManager;
+        _hostEmployeeManager = hostEmployeeManager;
+        _visitRecordManager = visitRecordManager;
     }
 
     public async Task<bool> ShowMenuAsync()
@@ -20,10 +30,10 @@ public class ReceptionistMenu
 
             ConsoleUI.PrintSection("Main Menu");
             ConsoleUI.PrintMenu(
+                "Manage Visitors",
+                "Manage Host Employees",
+                "Manage Visits",
                 "View Current User",
-                "Check-In Visitor (Coming Soon)",
-                "Check-Out Visitor (Coming Soon)",
-                "View Active Visits (Coming Soon)",
                 "Logout"
             );
 
@@ -32,19 +42,16 @@ public class ReceptionistMenu
             switch (choice)
             {
                 case 1:
-                    ShowCurrentUser();
+                    await _visitorManager.ShowMenuAsync();
                     break;
                 case 2:
-                    ConsoleUI.PrintInfo("Check-In Visitor feature coming soon.");
-                    ConsoleUI.PressAnyKeyToContinue();
+                    await _hostEmployeeManager.ShowMenuAsync();
                     break;
                 case 3:
-                    ConsoleUI.PrintInfo("Check-Out Visitor feature coming soon.");
-                    ConsoleUI.PressAnyKeyToContinue();
+                    await _visitRecordManager.ShowMenuAsync();
                     break;
                 case 4:
-                    ConsoleUI.PrintInfo("View Active Visits feature coming soon.");
-                    ConsoleUI.PressAnyKeyToContinue();
+                    ShowCurrentUser();
                     break;
                 case 5:
                     ConsoleUI.PrintSuccess("Logging out...");
