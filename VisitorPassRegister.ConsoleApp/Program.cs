@@ -30,10 +30,12 @@ services.AddScoped<IVisitRecordRepository, VisitRecordRepository>();
 services.AddScoped<VisitorService>();
 services.AddScoped<HostEmployeeService>();
 services.AddScoped<VisitRecordService>();
+services.AddScoped<StartupSeeder>();
+services.AddScoped<AuthService>();
 
 var serviceProvider = services.BuildServiceProvider();
 
-// Test DbContext resolution
+// Initialize application
 using (var scope = serviceProvider.CreateScope())
 {
     var dbContext = scope.ServiceProvider.GetRequiredService<AppDbContext>();
@@ -41,18 +43,67 @@ using (var scope = serviceProvider.CreateScope())
     // Apply migrations
     Console.WriteLine("Applying database migrations...");
     dbContext.Database.Migrate();
-    Console.WriteLine("✓ Database migrations applied successfully.");
+    Console.WriteLine("✓ Database migrations applied successfully.\n");
 
-    // Verify repository resolution
-    var visitorRepo = scope.ServiceProvider.GetRequiredService<IVisitorRepository>();
-    var hostRepo = scope.ServiceProvider.GetRequiredService<IHostEmployeeRepository>();
-    var visitRepo = scope.ServiceProvider.GetRequiredService<IVisitRecordRepository>();
+    // Run seeding
+    var seeder = scope.ServiceProvider.GetRequiredService<StartupSeeder>();
+    await seeder.SeedDefaultDataAsync();
+    Console.WriteLine();
 
-    // Verify service resolution
-    var visitorService = scope.ServiceProvider.GetRequiredService<VisitorService>();
-    var hostService = scope.ServiceProvider.GetRequiredService<HostEmployeeService>();
-    var visitService = scope.ServiceProvider.GetRequiredService<VisitRecordService>();
+    // Verify authentication setup
+    var authService = scope.ServiceProvider.GetRequiredService<AuthService>();
+    Console.WriteLine("Testing authentication...");
+    
+    // Test Receptionist login
+    try
+    {
+        var receptionist = await authService.AuthenticateAsync("reception", "reception123");
+        if (receptionist != null)
+        {
+            Console.WriteLine($"✓ Receptionist login successful: {receptionist.FullName} ({receptionist.Role})");
+        }
+        else
+        {
+            Console.WriteLine("✗ Receptionist login failed: Invalid credentials");
+        }
+    }
+    catch (Exception ex)
+    {
+        Console.WriteLine($"✗ Receptionist login error: {ex.Message}");
+    }
 
-    Console.WriteLine("✓ Repositories and Services successfully resolved and configured.");
+    // Test Staff login
+    try
+    {
+        var staff = await authService.AuthenticateAsync("staff", "staff123");
+        if (staff != null)
+        {
+            Console.WriteLine($"✓ Staff login successful: {staff.FullName} ({staff.Role})");
+        }
+        else
+        {
+            Console.WriteLine("✗ Staff login failed: Invalid credentials");
+        }
+    }
+    catch (Exception ex)
+    {
+        Console.WriteLine($"✗ Staff login error: {ex.Message}");
+    }
+
+    // Test invalid login
+    try
+    {
+        var invalid = await authService.AuthenticateAsync("invalid", "wrongpassword");
+        if (invalid == null)
+        {
+            Console.WriteLine("✓ Invalid login correctly rejected");
+        }
+    }
+    catch (Exception ex)
+    {
+        Console.WriteLine($"✗ Invalid login test error: {ex.Message}");
+    }
+
+    Console.WriteLine("\n✓ Application initialization completed successfully.");
     Console.WriteLine("✓ Application is ready for further development.");
 }
