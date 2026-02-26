@@ -24,6 +24,12 @@ var serviceProvider = services.BuildServiceProvider();
 using (var scope = serviceProvider.CreateScope())
 {
     var dbContext = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+    
+    // Apply migrations
+    Console.WriteLine("Applying database migrations...");
+    dbContext.Database.Migrate();
+    Console.WriteLine("✓ Database migrations applied successfully.");
+
     Console.WriteLine("✓ DbContext successfully resolved and configured.");
     Console.WriteLine("✓ Application is ready for further development.");
 }
